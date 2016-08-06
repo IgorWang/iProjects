@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Project : web-server
 # Created by igor on 16/8/6
-import BaseHTTPServer, os, sys
+import os, sys, subprocess
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
 class ServerException(Exception):
@@ -53,7 +54,20 @@ class Case_directory_index_file(object):
         handler.handle_file(self.index_path(handler))
 
 
-class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class Case_cgi_file(object):
+    '''
+    脚本文件处理
+    '''
+
+    def test(self, handler):
+        return os.path.isfile(handler.full_path) and handler.full_path.endswith('.py')
+
+    def act(self, handler):
+        ## 运行脚本
+        handler.run_cgi(handler.full_path)
+
+
+class RequestHandler(BaseHTTPRequestHandler):
     '''处理请求并返回指定的页面'''
 
     # 页面模版
@@ -83,6 +97,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     '''
 
     Cases = [Case_no_file(),
+             Case_cgi_file(),
              Case_existing_file(),
              Case_directory_index_file(),
              Case_always_fail()]
@@ -120,6 +135,8 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.send_header("Content-Length", str(len(page)))
         self.end_headers()
+        if isinstance(page, str):
+            page = page.encode()
         self.wfile.write(page)
 
     def handle_file(self, full_path):
@@ -136,8 +153,12 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                                          msg=msg)
         self.send_content(content, status=404)
 
+    def run_cgi(self, full_path):
+        data = subprocess.check_output(["python", full_path])
+        self.send_content(data)
+
 
 if __name__ == "__main__":
     serverAddress = ("", 8080)
-    server = BaseHTTPServer.HTTPServer(serverAddress, RequestHandler)
+    server = HTTPServer(serverAddress, RequestHandler)
     server.serve_forever()
