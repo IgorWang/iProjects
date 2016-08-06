@@ -11,6 +11,48 @@ class ServerException(Exception):
     pass
 
 
+class Case_no_file(object):
+    '''路径不存在'''
+
+    def test(self, handler):
+        return not os.path.exists(handler.full_path)
+
+    def act(self, handler):
+        raise ServerException("'{0}' not found".format(handler.path))
+
+
+class Case_existing_file(object):
+    '''文件存在'''
+
+    def test(self, handler):
+        return os.path.isfile(handler.full_path)
+
+    def act(self, handler):
+        handler.handle_file(handler.full_path)
+
+
+class Case_always_fail(object):
+    '''所有情况都不符合的默认处理类'''
+
+    def test(self, handler):
+        return True
+
+    def act(self, handler):
+        raise ServerException("Unknow object '{0}'".format(handler.path))
+
+
+class Case_directory_index_file(object):
+    def index_path(self, handler):
+        return os.path.join(handler.full_path,
+                            'index.html')
+
+    def test(self, handler):
+        return os.path.isdir(handler.full_path) and os.path.isfile(self.index_path(handler))
+
+    def act(self, handler):
+        handler.handle_file(self.index_path(handler))
+
+
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     '''处理请求并返回指定的页面'''
 
@@ -40,20 +82,25 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     </html>
     '''
 
+    Cases = [Case_no_file(),
+             Case_existing_file(),
+             Case_directory_index_file(),
+             Case_always_fail()]
+
     # 处理一个GET请求
     def do_GET(self):
         try:
-            full_path = os.getcwd() + self.path
-            if not os.path.exists(full_path):
-                raise ServerException("'{0} not found ".format(self.path))
-
-            elif os.path.isfile(full_path):
-                self.handle_file(full_path)
-            else:
-                raise ServerException("Unkonw object '{0}'".format(self.path))
+            self.full_path = os.getcwd() + self.path
+            for case in self.Cases:
+                handler = case
+                # 如果满足该类的情况
+                if handler.test(self):
+                    handler.act(self)
+                    break
 
         except Exception as msg:
             self.handle_error(msg)
+
         page = self.create_page()
         self.send_content(page)
 
