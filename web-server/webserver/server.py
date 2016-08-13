@@ -12,6 +12,32 @@ class ServerException(Exception):
     pass
 
 
+class Base_case(object):
+    '''
+    条件处理基类
+    '''
+
+    def handle_file(self, full_path):
+        try:
+            with open(full_path, 'rb') as reader:
+                content = reader.read()
+            self.send_content(content)
+        except IOError as msg:
+            msg = "'{0}' cannot be read : {1}".format(self.path, msg)
+            self.handle_error(msg)
+
+    def index_path(self, handler):
+        return os.path.join(handler.full_path,
+                            'index.html')
+
+    # 要求子类必须实现该接口
+    def test(self, handler):
+        assert False, "Not implementd."
+
+    def act(self, handler):
+        assert False, "Not implementd."
+
+
 class Case_no_file(object):
     '''路径不存在'''
 
@@ -138,15 +164,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         if isinstance(page, str):
             page = page.encode()
         self.wfile.write(page)
-
-    def handle_file(self, full_path):
-        try:
-            with open(full_path, 'rb') as reader:
-                content = reader.read()
-            self.send_content(content)
-        except IOError as msg:
-            msg = "'{0}' cannot be read : {1}".format(self.path, msg)
-            self.handle_error(msg)
 
     def handle_error(self, msg):
         content = self.Error_Page.format(path=self.path,

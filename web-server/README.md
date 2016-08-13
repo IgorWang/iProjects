@@ -11,7 +11,7 @@ Project content：
 - GGI protocol
 - Code Refactorisation with OOP
 
-s
+
 # Reference
 
 [实验楼文档](https://www.shiyanlou.com/courses/552/labs/1867/document)

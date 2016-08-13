@@ -100,5 +100,3 @@ ENV/
 *.iml
 out
 gen
-.idea/
-web-server/.idea
