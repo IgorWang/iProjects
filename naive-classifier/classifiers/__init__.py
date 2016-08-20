@@ -3,3 +3,4 @@
 # Created by igor on 16/8/13
 
 from classifiers.linear_classifier import LinearSVM
+from classifiers.linear_classifier import Softmax
