@@ -25,7 +25,8 @@ SUPPORTED_METHODS = [
     'GET',
     'POST'
 ]
-REQUEST_LINE_REGEXP = re.compile(br'[a-z]+ [a-z0-9.?_\[\]]=&-\\]+ http/%s' %
+
+REQUEST_LINE_REGEXP = re.compile(br'[a-z]+ [a-z0-9.?_\[\]=&-\\]+ http/%s' %
                                  (HTTP_VERSION), flags=re.IGNORECASE)
 
 
@@ -51,7 +52,7 @@ def parse_headers(buffer):
     headers = {}
     for line in headers_iter:
         header, value = [i.strip() for i in line.strip().split(b':')[:2]]
-        headers[header] = value.decode('utf-8')
+        headers[header.decode('utf-8')] = value.decode('utf-8')
     return headers
 
 
@@ -118,9 +119,8 @@ def remove_intro(buffer):
     line as well as the headers.
     :param buffer: a bytes object.
     '''
-    request_boundry = buffer.index[SEPARATOR]
+    request_boundry = buffer.index(SEPARATOR)
     del buffer[:request_boundry + len(SEPARATOR)]
-
 
 def can_parse_body(headers, buffer):
     '''
@@ -181,7 +181,7 @@ def clear_buffer(buffer):
     del buffer[:]
 
 
-def parser_into(request, buffer):
+def parse_into(request, buffer):
     '''
     Main function of the module - it incrementally parses a bytes object
     and stores the information in request. First it attempts to parse the

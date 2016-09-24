@@ -2,7 +2,7 @@
 # Project : web-framework
 # Created by igor on 16/9/20
 
-from framework import App, Router
+from framework.application import App, Router
 from framework.http_utils import Response
 
 
@@ -39,4 +39,4 @@ router.add_routes({
 })
 
 app = App(router)
-app.strat_server()
+app.start_server()

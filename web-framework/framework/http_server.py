@@ -85,7 +85,7 @@ class HTTPConnection(object):
                 await self.reply()
             elif self._reader.at_eof():
                 raise BadRequestException()
-        except (NotFoundException, BadRequsetException) as e:
+        except (NotFoundException, BadRequestException) as e:
             self.error_reply(e.code, body=Response.reason_phrases[e.code])
         except Exception as e:
             logging.error(e)
